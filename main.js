@@ -20,8 +20,15 @@ function setup(){
     canvas = createCanvas(280, 280);
     canvas.center();
     background("white");
+    synth = window.speechSynthesis;
+    canvas.mouseReleased(classifyCanvas);
 
 }
+
+function preload(){
+    classifier = ml5.imageClassifier('DoodleNet');
+}
+
 
 function updateCanvas(){
     background("white");
@@ -29,23 +36,31 @@ function updateCanvas(){
     console_thing = quick_draw_data_set[random_number]
     console.log(console_thing);
     sketch = console_thing;
-    console.log(sketch);
 
-    document.getElementById("sketchtobedrawn").innerHTML = console_thing;
+    document.getElementById("sketchtobedrawn").innerHTML = sketch;
 }
 
 function draw(){
     check_sketch();
-    sketch = console_thing;
-    if (drawn_sketch = sketch){
-        answer_holder = "set";
+    console.log(drawn_sketch);
+    console.log(sketch);
+    if (drawn_sketch == sketch){
+        //answer_holder = "set";
         score = score + 1;
         document.getElementById("score").innerHTML = score;
         console.log(score);
+    } else{
+        console_thing = console_thing;
     }
-    else{
-        sketch = console_thing;
+    strokeWeight(13);
+    stroke(0)
+    if (mouseIsPressed){
+        line(pmouseX, pmouseY, mouseX, mouseY);
     }
+}
+
+function classifyCanvas(){
+    classifier.classify(canvas,gotResult)
 }
 
 function check_sketch(){
@@ -55,11 +70,31 @@ function check_sketch(){
     if (timer_counter>400){
         timer_counter = 0;
         timer_check = "completed";
+        sketch = console_thing;
+        updateCanvas();
     }
-    if ((timer_check = "completed") || (answer_holder = "set")){
+    if ((timer_check = "completed")){
         timer_check = "";
         answer_holder = "";
-        updateCanvas();
+        //updateCanvas();
+    }
+    if (answer_holder = "set"){
+        timer_check = "";
+        answer_holder = "";
+        //updateCanvas();
     }
 
 }
+
+function gotResult(error, results){
+    if (error){
+        console.error(error);
+    }
+    console.log(results);
+    document.getElementById("yoursketch").innerHTML = "your sketch: " + results[0].label;
+    document.getElementById('confidence').innerHTML = "confidence: " + Math.round(results[0].confidence * 100) + "%";
+
+    drawn_sketch = results[0].label;
+    utterThis = new SpeechSynthesisUtterance(results[0].label);
+    //synth.speak(utterThis);
+}   
